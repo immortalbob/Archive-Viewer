@@ -1,0 +1,164 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1e1e1e;
+    color: #c7c7c7;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+h1 {
+    text-align: center;
+    color: #c7c7c7;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    margin: 20px;
+}
+
+.header-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px;
+}
+
+#directory-tree {
+    background-color: #2d2d2d;
+    padding: 20px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    width: 35%;
+    box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
+    overflow-y: auto; /* Ensure directory-tree can scroll */
+    height: calc(100vh - 120px); /* Full height except for header */
+}
+
+#file-details {
+    background-color: #2d2d2d;
+    padding: 20px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    width: 65%;
+    box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
+    overflow-y: auto; /* Make file-details scrollable */
+    height: calc(100vh - 120px); /* Full height except for header */
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.directory > span {
+    cursor: pointer;
+}
+
+.directory.collapsed > ul {
+    display: none;
+}
+
+.details {
+    margin-bottom: 20px;
+}
+
+.selected {
+    font-weight: bold;
+}
+
+.dark-mode {
+    background-color: #1e1e1e;
+    color: #c7c7c7;
+}
+
+.dark-mode #directory-tree,
+.dark-mode #file-details {
+    background-color: #2d2d2d;
+    border-color: #555;
+}
+
+.dark-mode h1 {
+    color: #c7c7c7;
+}
+
+.dark-mode button {
+    background-color: #333;
+    color: #c7c7c7;
+    border: 1px solid #555;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dark-mode button:hover {
+    background-color: #555;
+}
+
+.light-mode {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.light-mode #directory-tree,
+.light-mode #file-details {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+.light-mode h1 {
+    color: #000000;
+}
+
+.light-mode button {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.light-mode button:hover {
+    background-color: #e0e0e0;
+}
+
+/* Alternating shading for list items */
+ul li:nth-child(odd) {
+    background-color: rgba(200, 200, 200, 0.1);
+}
+
+ul li:nth-child(even) {
+    background-color: rgba(50, 50, 50, 0.1);
+}
+
+.light-mode ul li:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.light-mode ul li:nth-child(even) {
+    background-color: rgba(240, 240, 240, 0.7);
+}
+
+/* Alternating shading for file details */
+#file-details .details:nth-child(odd) {
+    background-color: rgba(200, 200, 200, 0.1);
+}
+
+#file-details .details:nth-child(even) {
+    background-color: rgba(50, 50, 50, 0.1);
+}
+
+.light-mode #file-details .details:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.light-mode #file-details .details:nth-child(even) {
+    background-color: rgba(240, 240, 240, 0.7);
+}
+
+.header-buttons button {
+    margin: 0 5px;
+}
