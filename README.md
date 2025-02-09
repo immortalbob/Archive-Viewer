@@ -15,7 +15,7 @@ Follow these steps to get your project up and running:
 
 1. **Clone the repository**: First, clone the repository to your local machine. Open a terminal or command prompt and run the following command:
     ```sh
-    git clone <repository_url>
+    git clone https://github.com/immortalbob/Archive-Viewer/
     ```
    Replace `<repository_url>` with the URL of your repository.
 
