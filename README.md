@@ -17,7 +17,6 @@ Follow these steps to get your project up and running:
     ```sh
     git clone https://github.com/immortalbob/Archive-Viewer/
     ```
-   Replace `<repository_url>` with the URL of your repository.
 
 2. **Navigate to the project directory**:
     ```sh
