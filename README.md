@@ -1,6 +1,6 @@
 # ACCPP Archive-Viewer
 
-This project is a web application that visualizes the directory tree of an archive. It is built with Flask, Flask-CORS, and pandas.
+This project is a web application that visualizes the directory tree of the ACCPP archive. It is built with Flask, Flask-CORS, and pandas.
 
 ## Prerequisites
 
