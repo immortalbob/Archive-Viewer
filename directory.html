@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ACCPP Archive File Tree</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* Dark mode (cobalt gray) styling */
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #343541; /* Dark cobalt gray background */
+      color: #d1d5db; /* Light gray text */
+    }
+	/* Header */
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+    }
+    /* Search Controls */
+    #search-controls {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #filterInput {
+      padding: 5px;
+      width: 200px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #3c3f4b;
+      color: #d1d5db;
+    }
+    #search-controls button {
+      padding: 5px 10px;
+      margin-left: 5px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #3c3f4b;
+      color: #d1d5db;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #search-controls button:hover {
+      background-color: #50575e;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      margin: 20px;
+    }
+    #directory-tree, #file-details {
+      background-color: #3c3f4b; /* Slightly lighter dark for containers */
+      padding: 15px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      width: 45%;
+      overflow-y: auto;
+      height: 500px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+    ul {
+      list-style: none;
+      padding-left: 15px;
+    }
+    li {
+      margin: 4px 0;
+    }
+    /* Folder (directory) styling to mimic Windows 11 in dark mode */
+    .directory > span {
+      display: block;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      color: #d1d5db;
+    }
+    .directory > span:hover {
+      background-color: #50575e;
+    }
+    /* Folder icons using Segoe MDL2 Assets */
+    .directory > span::before {
+      font-family: 'Segoe MDL2 Assets';
+      content: '\E8B7'; /* Closed folder icon */
+      margin-right: 8px;
+      font-size: 16px;
+      color: #d1d5db;
+    }
+    .directory:not(.collapsed) > span::before {
+      content: '\E8B5'; /* Open folder icon */
+    }
+    /* Ensure child nodes are hidden when a folder is collapsed */
+    .directory.collapsed > ul {
+      display: none;
+    }
+    /* File item styling */
+    li:not(.directory) {
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      color: #d1d5db;
+    }
+    li:not(.directory):hover {
+      background-color: #50575e;
+    }
+    /* Highlight for search result */
+    .search-highlight {
+      background-color: #005a9e !important;
+      color: #fff !important;
+    }
+    /* Enhanced styling for file details pane */
+    #file-details h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #555;
+      padding-bottom: 5px;
+    }
+    #file-details table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    #file-details table, 
+    #file-details th, 
+    #file-details td {
+      border: 1px solid #555;
+    }
+    #file-details th, 
+    #file-details td {
+      padding: 8px;
+      text-align: left;
+    }
+    #file-details th {
+      background-color: #2c2f36;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<h1>ACCPP <a href="https://mega.nz/#F!L1MniCKJ!1dQCCFPc2ddcFILa_JGeZw">Archive</a> File Tree</h1>
+  
+  <!-- File upload is now above the filter controls -->
+  <div id="search-controls">
+    <input type="text" id="filterInput" placeholder="Filter by file name">
+    <button id="prevResult">Previous</button>
+    <button id="nextResult">Next</button>
+  </div>
+  
+  <div class="container">
+    <div id="directory-tree">Loading Directory.csv</div>
+    <div id="file-details">Select a directory to view its files</div>
+  </div>
+<h1>Visit our main site at <a href="https:\\www.accpp.net">ACCPP.net</a> or join our <a href="https://discord.gg/zEyxKfy">discord</a></h1>
+
+  <script>
+  
+
+    // Converts bytes to a human-readable format.
+    function convertSize(bytes) {
+      bytes = parseInt(bytes);
+      if (isNaN(bytes) || bytes < 0) return "";
+      if (bytes === 0) return "0 B";
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      const s = (bytes / Math.pow(1024, i)).toFixed(2);
+      return s + ' ' + sizes[i];
+    }
+    
+    // Removes the "D:\ACCPP\" prefix from a file path.
+    function removeDrivePrefix(path) {
+      if (path.startsWith("D:\\ACCPP\\")) {
+        return path.substring("D:\\ACCPP\\".length);
+      }
+      return path;
+    }
+    
+    // Parse CSV into an array of objects.
+    function parseCSV(csv) {
+      const rows = csv.split(/\r?\n/).filter(row => row.trim() !== "").map(row => row.split(","));
+      const headers = rows.shift().map(h => h.trim().replace(/\"/g, ""));
+      return rows.map(row => {
+        let obj = {};
+        row.forEach((val, i) => {
+          obj[headers[i]] = val ? val.trim().replace(/\"/g, "") : "";
+        });
+        return obj;
+      });
+    }
+    
+    // Build a nested directory tree from the file list.
+    function buildTree(files) {
+      let tree = {};
+      files.forEach(file => {
+        if (!file["FullName"] || file["FullName"].trim() === "") return;
+        let pathParts = file["FullName"]
+          .replace(/^D:\\ACCPP\\/, '')
+          .split(/\\|\/+/)
+          .filter(Boolean);
+        let current = tree;
+        pathParts.forEach((part, i) => {
+          if (!current[part]) {
+            current[part] = (i === pathParts.length - 1) ? file : {};
+          }
+          current = current[part];
+        });
+      });
+      return tree;
+    }
+    
+    // Recursively create the HTML list for the directory tree.
+    function createTree(data) {
+      if (!Object.keys(data).length) {
+        return $('<p>No files found.</p>');
+      }
+      const ul = $('<ul></ul>');
+      $.each(data, function(key, value) {
+        const li = $('<li></li>');
+        if (typeof value === 'object' && !value["FullName"]) {
+          li.addClass('directory collapsed');
+          const span = $('<span>' + key + '</span>');
+          span.click(function(e) {
+            e.stopPropagation();
+            li.toggleClass('collapsed');
+          });
+          li.append(span).append(createTree(value));
+        } else {
+          li.text(key);
+          li.data("filename", key);
+          li.data("file", value);
+          li.click(() => displayFileDetails(value));
+        }
+        ul.append(li);
+      });
+      return ul;
+    }
+    
+    // Display file details in the right pane as a table.
+    function displayFileDetails(file) {
+      // Determine the file name (using "FileName" or "Name").
+      let fileName = file["FileName"] || file["Name"] || "Unnamed File";
+      
+      // Process the file path.
+      let filePath = file["FullName"] || "";
+      filePath = removeDrivePrefix(filePath);
+      
+      // Create the table.
+      let $table = $('<table></table>');
+      
+      // Add the file name as a header row spanning both columns.
+      let $nameRow = $('<tr></tr>');
+      let $nameCell = $('<th colspan="2"></th>').text(fileName);
+      $nameRow.append($nameCell);
+      $table.append($nameRow);
+      
+      // Define the order of properties to display.
+      let order = ["FullName", "Extension", "Length", "CreationTime", "LastWriteTime", "Hash"];
+      order.forEach(function(key) {
+        if (file[key] !== undefined) {
+          let displayKey = key;
+          let displayValue = file[key];
+          if (key === "FullName") {
+            displayKey = "File Path";
+            displayValue = filePath;
+          }
+          if (key === "Length") {
+            displayKey = "Size";
+            displayValue = convertSize(displayValue);
+          }
+          let $row = $('<tr></tr>');
+          $row.append($('<th></th>').text(displayKey));
+          $row.append($('<td></td>').text(displayValue));
+          $table.append($row);
+        }
+      });
+      
+      // Use the URL from the CSV (assumed to be in the "URL" column) as the Archive Link.
+      if (file["URL"]) {
+        let archiveLink = file["URL"];
+        let $linkRow = $('<tr></tr>');
+        $linkRow.append($('<th></th>').text("Archive Link"));
+        let $linkCell = $('<td></td>');
+        let $link = $('<a></a>')
+          .attr("href", archiveLink)
+          .attr("target", "_blank")
+          .text("Open Archive");
+        $linkCell.append($link);
+        $linkRow.append($linkCell);
+        $table.append($linkRow);
+      }
+      
+      $('#file-details').html('<h2>File Details</h2>').append($table);
+    }
+    
+    // Handle CSV file upload and update the directory tree.
+    $('#csvFile').change(function(event) {
+      $('#directory-tree').text('Loading...');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const files = parseCSV(e.target.result);
+        if (files.length === 0) {
+          $('#directory-tree').text('No data found in CSV');
+          return;
+        }
+        const tree = buildTree(files);
+        $('#directory-tree').html('').append(createTree(tree));
+      };
+      reader.readAsText(event.target.files[0]);
+    });
+    
+    // --- Search / Filter Functionality ---
+    let searchResults = [];
+    let currentIndex = -1;
+    let debounceTimer;
+    
+    function updateSearchResults() {
+      let query = $('#filterInput').val().toLowerCase();
+      $('#directory-tree li').removeClass('search-highlight');
+      searchResults = [];
+      currentIndex = -1;
+      if (query === '') return;
+      
+      $('#directory-tree li').each(function() {
+        let filename = $(this).data('filename');
+        if (filename && filename.toLowerCase().indexOf(query) !== -1) {
+          searchResults.push(this);
+        }
+      });
+      if (searchResults.length > 0) {
+        currentIndex = 0;
+        highlightCurrentResult();
+      }
+    }
+    
+    function highlightCurrentResult() {
+      $('#directory-tree li').removeClass('search-highlight');
+      if (searchResults.length === 0 || currentIndex < 0 || currentIndex >= searchResults.length) return;
+      let currentItem = $(searchResults[currentIndex]);
+      $('#directory-tree li.directory').addClass('collapsed');
+      currentItem.parents('li.directory').removeClass('collapsed');
+      currentItem.addClass('search-highlight');
+      
+      let container = $('#directory-tree');
+      let containerHeight = container.height();
+      let itemHeight = currentItem.outerHeight();
+      let scrollTop = currentItem.offset().top - container.offset().top + container.scrollTop() - (containerHeight / 2) + (itemHeight / 2);
+      container.animate({ scrollTop: scrollTop }, 300);
+      
+      if (!currentItem.hasClass('directory')) {
+        displayFileDetails(currentItem.data("file"));
+      }
+    }
+    
+    $('#filterInput').on('input', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function() {
+        updateSearchResults();
+      }, 300);
+    });
+    
+    $('#prevResult').click(function() {
+      if (searchResults.length === 0) return;
+      currentIndex = (currentIndex - 1 + searchResults.length) % searchResults.length;
+      highlightCurrentResult();
+    });
+    
+    $('#nextResult').click(function() {
+      if (searchResults.length === 0) return;
+      currentIndex = (currentIndex + 1) % searchResults.length;
+      highlightCurrentResult();
+    });
+	
+	  function loadCSVFromGitHub() {
+      const githubCSVUrl = "https://raw.githubusercontent.com/immortalbob/Archive-Viewer/refs/heads/main/directory.csv";
+
+      $.ajax({
+        url: githubCSVUrl,
+        dataType: "text",
+        success: function(data) {
+          const files = parseCSV(data);
+          if (files.length === 0) {
+            $('#directory-tree').text('No data found in CSV');
+            return;
+          }
+          const tree = buildTree(files);
+          $('#directory-tree').html('').append(createTree(tree));
+        },
+        error: function() {
+          $('#directory-tree').text('Failed to load directory from GitHub.');
+        }
+      });
+    }
+
+    $(document).ready(function() {
+      loadCSVFromGitHub();
+    });
+	
+  </script>
+</body>
+</html>
